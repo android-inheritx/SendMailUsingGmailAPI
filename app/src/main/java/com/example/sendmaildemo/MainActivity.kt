@@ -31,6 +31,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.doAsyncResult
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.IOException
 import java.lang.Exception
 import java.util.*
@@ -100,9 +101,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setListener() {
         btnSelectFile.setOnClickListener {
-            val photoPickerIntent = Intent(Intent.ACTION_PICK)
-            photoPickerIntent.type = "video/*"
-            startActivityForResult(photoPickerIntent, SELECT_VIDEO)
+            pickVideo()
         }
 
         btnSendEmail.setOnClickListener {
@@ -115,6 +114,12 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+    }
+
+    private fun pickVideo() {
+        val photoPickerIntent = Intent(Intent.ACTION_PICK)
+        photoPickerIntent.type = "video/*"
+        startActivityForResult(photoPickerIntent, SELECT_VIDEO)
     }
 
 
@@ -356,7 +361,24 @@ class MainActivity : AppCompatActivity() {
                 SELECT_VIDEO -> {
                     val videoUri = data!!.data
                     fileName = getPathFromURI(videoUri!!).orEmpty()
-                    tvSelectedFileName.text = fileName
+
+                    // Get file from file name
+                    val file = File(fileName)
+                    val fileSizeInBytes = file.length()
+                    val fileSizeInKB = fileSizeInBytes / 1024 //in KB
+                    val fileSizeInMB = fileSizeInKB / 1024 // in MB
+
+                    if (fileSizeInMB > 35) {
+                        Toast.makeText(
+                            this,
+                            "Please select file with size less than 35MB.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        fileName = ""
+                        pickVideo()
+                    } else {
+                        tvSelectedFileName.text = fileName
+                    }
                 }
 
                 REQUEST_ACCOUNT_PICKER -> {
