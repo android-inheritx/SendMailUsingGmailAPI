@@ -97,6 +97,7 @@ class MainActivity : AppCompatActivity() {
 
         mProgress = ProgressDialog(this)
         mProgress?.setMessage("Sending...")
+        mProgress?.setCancelable(false)
     }
 
     private fun setListener() {
@@ -225,6 +226,7 @@ class MainActivity : AppCompatActivity() {
 
         val toArrayList = to.split(",")
 
+        mProgress!!.show()
         doAsync {
             try {
                 mimeMessage = createEmail(toArrayList, from, subject, body)
@@ -235,6 +237,7 @@ class MainActivity : AppCompatActivity() {
                 message = mService.users().messages().send(user, message).execute()
 
                 runOnUiThread {
+                    mProgress!!.hide()
                     if (message.id != null && message.id != "") {
                         Toast.makeText(
                             this@MainActivity,
@@ -249,9 +252,13 @@ class MainActivity : AppCompatActivity() {
                 println(message.toPrettyString())
 
             } catch (e: UserRecoverableAuthIOException) {
+                runOnUiThread {
+                    mProgress!!.hide()
+                }
                 startActivityForResult(e.intent, REQUEST_AUTHORIZATION)
             } catch (e: GoogleJsonResponseException) {
                 runOnUiThread {
+                    mProgress!!.hide()
                     if (e.details.errors[0].domain.equals("global", true)) {
                         Toast.makeText(
                             this@MainActivity,
@@ -265,6 +272,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
+                runOnUiThread {
+                    mProgress!!.hide()
+                }
                 e.printStackTrace()
             }
         }
